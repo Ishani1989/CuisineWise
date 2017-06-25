@@ -58,6 +58,11 @@ h3 {
     background-color: #F2F5A9;
 }
 
+.container{
+	background-color: #FDFFBB ;
+	border-style: 1 px solid #3B9700;
+}
+
 .padding-top {
 	padding-top: 30px;
 }
@@ -109,20 +114,16 @@ h3 {
 .divider {
 	height: 15px;
 }
-.divider.blue {
-	background-color: #42C3C9;
-}
-.divider.green {
-	background-color: #9FB80A;
-}
-/*.banner.main {
+
+.banner.main {
 	background: url("/static/top-banner.jpg");
 	background-repeat: no-repeat;
-	background-size: cover;
-}*/
+	margin-left: 2px;
+	margin-right: 2px;	}
+
 .banner.menu {
 	height: 150px;
-	background-color: linear-gradient(to right, #F99633  0%, #FFFFAA 100%);
+	background: linear-gradient(to right, #F9FFAB 0%, #C4F29E  100%);
 }
 .banner.profile {
 	height: 150px;
@@ -138,7 +139,7 @@ h3 {
 }
 
 .navbar-inverse{
-	background: linear-gradient(to right, #F99633  0%, #FFFFAA 100%);
+	background: linear-gradient(to right, #FAFFC0 0%, #E8FFC0 100%);
 }
 
 .navbar-inverse .navbar-brand {
@@ -146,7 +147,7 @@ h3 {
 }
 
  .restaurant-list {
- 	background: linear-gradient(to right, #F99633  0%, #FFFFAA 100%);
+ 	background: linear-gradient(to right, #F9FFAB  0%, #C4F29E  100%);
  	color : red;
  	padding: 10px;
 u }
@@ -158,7 +159,7 @@ u }
 }
 
 .menu-item {
-	background: linear-gradient(to right, #F99633  0%, #FFFFAA 100%);
+	background: linear-gradient(to right, #F9FFAB  0%, #C4F29E  100%);
 	padding: 20px;
 	margin: 20px;
 	margin-left: -20px;

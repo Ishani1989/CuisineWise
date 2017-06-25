@@ -223,17 +223,6 @@ def showDishes(cuisine_id):
     dishes = session.query(Dish).filter_by(cuisine_id=cuisine_id).all()
     return render_template('cuisinedishes.html', items=dishes, cuisine=cuisine)
 
-# ShowDish Description
-
-# Edit a restaurant
-@app.route('/restaurant/<int:cuisine_id>/edit/', methods=['GET', 'POST'])
-def editCuisine(cuisine_id):
-    return "edit page for cuisine"
-
-# Edit a restaurant
-@app.route('/restaurant/<int:cuisine_id>/edit/', methods=['GET', 'POST'])
-def deleteCuisine(cuisine_id):
-    return "edit page for cuisine"
 
 # Edit a restaurant
 @app.route('/cuisines/<int:cuisine_id>/<int:dish_id>/edit/', methods=['GET', 'POST'])
@@ -282,7 +271,7 @@ def newDish():
 # Delete a dish
 @app.route('/restaurant/<int:cuisine_id>/edit/', methods=['GET', 'POST'])
 def deleteDish(cuisine_id, dish_id):
-    return "delete page for dish"
+ return "haha"
 # Show dish description
 @app.route('/restaurant/<int:cuisine_id>/dish/<int:dish_id>/', methods=['GET', 'POST'])
 def showDescription(dish_id, cuisine_id):
