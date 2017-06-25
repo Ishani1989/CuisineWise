@@ -31,10 +31,10 @@
 					{% for i in items %}
 						<a href = "{{url_for('showDescription', dish_id = i.id, cuisine_id = cuisine.id)}}">
 							<div class="menu-item">
-								<h3>{{i.name}}</h3>
+								<h3 id="dishname">{{i.name}}</h3>
 								<p>{{i.description}}</p>
 								<a href='{{url_for('editDish', dish_id=i.id, cuisine_id = cuisine.id) }}'>Edit</a> | 
-								<a href='{{url_for('deleteDish', cuisine_id = cuisine.id) }}'>Delete</a>
+								<a href='{{url_for('deleteDish', dish_id=i.id) }}'>Delete
 							</div>
 						</a>
 					{% endfor %}

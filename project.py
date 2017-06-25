@@ -269,9 +269,17 @@ def newDish():
 
     
 # Delete a dish
-@app.route('/restaurant/<int:cuisine_id>/edit/', methods=['GET', 'POST'])
-def deleteDish(cuisine_id, dish_id):
- return "haha"
+@app.route('/restaurant/<int:dish_id>/delete', methods=['GET', 'POST'])
+def deleteDish(dish_id):
+    dish = session.query(Dish).filter_by(id=dish_id).one()
+    name = dish.name
+    if request.method == 'POST':
+        session.delete(dish)
+        session.commit()
+        flash(' %s dish Successfully deleted' % (name))
+        return redirect(url_for('showDishes', cuisine_id=dish.cuisine_id))
+    else:
+        return render_template('deletemenuitem.html', dish = dish, cuisine_id= dish.cuisine_id)
 # Show dish description
 @app.route('/restaurant/<int:cuisine_id>/dish/<int:dish_id>/', methods=['GET', 'POST'])
 def showDescription(dish_id, cuisine_id):
