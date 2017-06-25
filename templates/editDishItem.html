@@ -1,0 +1,38 @@
+{% extends "main.html" %}
+{% block content %}
+{% include "header.html" %}
+	<div class="row banner menu">
+		<div class="col-md-11 col-md-offset-1 padding-none">
+			<h1>Edit Dish Entry</h1>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-6 col-md-offset-1 padding-top">
+      		
+			<form action="#" method = "post">
+				<div class="form-group">
+					<label for="name">Name:</label>
+					<input type ="text" maxlength="500" class="form-control" name="name" value= "{{ dish.name }}">
+
+					<label for="description">Description:</label>
+					<textarea class="form-control" maxlength="250" rows="2" name="description">{{ dish.description }}</textarea>
+
+					<label for="recipe">Recipe:</label>
+						
+						<textarea class="form-control" maxlength="2000" rows="10" name="recipe">{{ dish.recipe }}</textarea>
+					<label for="cuisine">Cuisine:</label>
+					<select name = "cuisine">
+					{% for item in cuisines %}
+     					<option value={{ item[0] }}{% if cuisine.name== item[0] %} selected="selected"{% endif %}>{{ item[0] }}
+				    	</option>	
+      				{% endfor %}
+      				</select>
+
+					<button type="submit" class="btn btn-default" id="submit" type="submit">
+					<span class="glyphicon glyphicon-glass" aria-hidden="true"></span>Update</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{% endblock %}
+

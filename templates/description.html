@@ -1,0 +1,27 @@
+{% extends "main.html" %}
+{% block content %}
+{% include "header.html" %}
+	<div class="row">
+		<div class="col-md-1"></div>
+		<div class="col-md-11 padding-none">
+			<h1>Cuisine Wise</h1>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-12">
+			<h2>{{dish.name}}</h2>
+		</div>
+	</div>
+		<div class="row">
+			<div class="col-md-3">
+				<p><em>{{dish.description}}</em></p>
+			</div>
+			<div class="col-md-7">
+				<p>{{dish.recipe}}</p>
+			</div>
+			<div class="col-md-7">
+				<img src = "/static/"+dish.picurl>
+			</div>
+		</div>
+	
+{% endblock %}

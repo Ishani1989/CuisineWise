@@ -1,0 +1,65 @@
+  <!--Start header.html -->
+  <div class="row">
+     <div class="col-md-6">
+        <!--<a href="{{url_for('showCuisines')}}">
+           <span class="glyphicon glyphicon-home" aria-hidden="true"></span>Show All Restaurants
+           </a>-->
+     </div>
+     <div class="col-md-6 text-right">
+        <div class="g-signin2" data-onsuccess="onSignIn"></div>
+        <meta name="google-signin-scope" content="openid email"/>
+        <meta name="google-signin-clientid" content="893057848592-c4dplknr2tfvbui5q817a97a88qitj2l.apps.googleusercontent.com"/>
+        <meta name="google-signin-redirecturi" content="postmessage"/>
+        <meta name="google-signin-accesstype" content="offline"/>
+        <meta name="google-signin-cookiepolicy" content="single_host_origin"/>
+        <meta name="google-signin-callback" content="signInCallback"/>
+        <meta name="google-signin-approvalprompt" content="force"/>
+     </div>
+     <div id="result"></div>
+     <script>
+        function signInCallback(authResult) {
+        	console.log(authResult)
+          console.log(authResult['code'])
+          if (authResult['code']) {
+            // Hide the sign-in button now that the user is authorized
+            $('#signinButton').attr('style', 'display: none');
+            // Send the one-time-use code to the server, if the server responds, write a 'login successful' message to the web page and then redirect back to the main restaurants page
+            $.ajax({
+              type: 'POST',
+              url: '/gconnect?state={{STATE}}',
+              processData: false,
+              data: authResult['code'],
+              contentType: 'application/octet-stream; charset=utf-8',
+              success: function(result) {
+                // Handle or verify the server response if necessary.
+                if (result) {
+                  $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
+                 setTimeout(function() {
+                  window.location.href = "/restaurant";
+                 }, 4000);
+                  
+              } else if (authResult['error']) {
+            console.log('There was an error: ' + authResult['error']);
+          } else {
+                $('#result').html('Failed to make a server-side call. Check your configuration and console.');
+                 }
+              }
+              
+          }); } }    
+     </script>
+  </div>
+  </div>
+<nav class="navbar navbar-inverse">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">Cuisine Wise</a>
+    </div>
+    <ul class="nav navbar-nav">
+      <li class="active"><a href="http://localhost:5000">Home</a></li>
+      <li><a href="{{url_for('newDish')}}"><span class="glyphicon glyphicon-glass" aria-hidden="true"></span>Add New Dish</a></li>
+      <!--
+      <li><a href="#">Page 2</a></li>
+      <li><a href="#">Page 3</a></li>
+      -->
+    </ul>
+</nav>
+  <!--End header.html -->
