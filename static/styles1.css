@@ -18,11 +18,16 @@ h2 {
 	line-height: 29px;
 }
 
-h3 {
-	font-size: 18px;
-	color: 'blue';
-	line-height: 23px;
+
+html, body{
+	height: 100%;
+	min-height: 100%;
 }
+
+.container{
+	height: 100%;
+}
+
  p {
  	font-family: "Helvetica Neue", Roboto, Helvetica, Arial, sans-serif;
  	font-size: 16px;
@@ -43,17 +48,14 @@ h3 {
  	line-height: 17px;
  }
 
-
 .right {
     float: right;
-    width: 70%;
     height: 90%;
   }
 
   /*content area for list and search input*/
 .left {
     float: left;
-    width: 25%;
     height: 90%;
     background-color: #F2F5A9;
 }
@@ -66,12 +68,19 @@ h3 {
 .padding-top {
 	padding-top: 30px;
 }
+
 .padding-bottom {
 	padding-bottom: 30px;
 }
+
 .margin-right {
 	margin-right: 30px;
 }
+
+.margin-top {
+	margin-top: 30px;
+}
+
 .padding-none {
 	padding: 0;
 }
@@ -125,13 +134,18 @@ h3 {
 	height: 150px;
 	background: linear-gradient(to right, #F9FFAB 0%, #C4F29E  100%);
 }
+
+.banner.menu.home{
+	height: 75px;
+}
 .banner.profile {
 	height: 150px;
 	background-color: #A6E8EB;
 }
 .banner h1 {
-	margin: 45px 0;
-	padding: 40px;	
+	margin: 10px 0;
+	padding: 10px;	
+	color : red;
 }
 
 .navbar-inverse .navbar-nav>li>a {
@@ -140,6 +154,7 @@ h3 {
 
 .navbar-inverse{
 	background: linear-gradient(to right, #9CCF7B 0%, #E8FFC0 100%);
+	background-color: #9CCF7B;
 }
 
 .navbar-inverse .navbar-brand {
@@ -147,15 +162,10 @@ h3 {
 }
 
  .restaurant-list {
- 	background: linear-gradient(to right, #F9FFAB  0%, #C4F29E  100%);
- 	color : red;
- 	padding: 10px;
-u }
+ 	color : blue;
+ }
+
  .restaurant-list:hover {
- 	padding-left: 20px;
- 	color: blue;
- 	text-shadow: -1px 0 red, 0 1px red, 1px 0 red, 0 -1px red;
- 	padding: 10px;
 }
 
 .menu-item {
@@ -164,25 +174,7 @@ u }
 	margin: 20px;
 	margin-left: -20px;
 }
-.menu-price {
-	font-weight: 700;
-}
-.creator {
-	padding-right: 20px;
-	margin-top: -20px;
-	text-align: right;
-	float:right;
-}
-.creator img {
-	width: 100px;
-	border-radius: 50%;
-}
-.creator figcaption {
-	font-size: 14px;
-	color: #7B7573;
-	font-weight: 400;
-	margin-top: -20px;
-}
+
 .flash {
 	background-color: #FFF9AB;
 	width:100%;

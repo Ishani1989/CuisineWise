@@ -1,10 +1,9 @@
 {% extends "main.html" %}
 {% block content %}
 {% include "header.html" %}
-	<div class="row">
-		<div class="col-md-1"></div>
-		<div class="col-md-11 padding-none">
-			<h1>Cuisine Wise</h1>
+	<div class="row banner main">
+		<div class="col-md-11 col-md-offset-1 padding-none">
+			<h1>Cuisine - {{ cuisine.name }} : {{dish.name}}</h1>
 		</div>
 	</div>
 	<div class="row">
@@ -18,9 +17,6 @@
 			</div>
 			<div class="col-md-7">
 				<p>{{dish.recipe}}</p>
-			</div>
-			<div class="col-md-7">
-				<img src = "/static/"+dish.picurl>
 			</div>
 		</div>
 	

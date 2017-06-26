@@ -46,27 +46,18 @@ session = DBSession()
 
 # Create anti-forgery state token
 @app.route('/login')
-def showLogin():
+def getLoginState():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in xrange(32))
     login_session['state'] = state
-    return "The current session state is %s" % login_session['state']
-    #return render_template('header.html', STATE=state)
-
-# Create anti-forgery state token
-'''
-@app.route('/callback')
-def callback():
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
-                    for x in xrange(32))
-    login_session['state'] = state
-    # return "The current session state is %s" % login_session['state']
-    return render_template('header.html', STATE=state)
-'''
+    print login_session['state']
+    return state;
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
     print 'inside gconnect'
+    print login_session['state']
+    
     # Validate state token
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter.'), 401)
@@ -131,7 +122,7 @@ def gconnect():
         return response'''
 
     # Store the access token in the session for later use.
-    login_session['credentials'] = credentials
+    #login_session['credentials'] = credentials
     login_session['gplus_id'] = gplus_id
 
     # Get user info
@@ -153,16 +144,12 @@ def gconnect():
       login_session['user_id'] = user_id
 
     print ('Before returning')
-    output = ''
-    output += '<h1>Welcome, '
-    output += login_session['username']
-    output += '!</h1>'
-    output += '<img src="'
-    output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
-    flash("you are now logged in as %s" % login_session['username'])
-    print "done!"
-    return output
+  
+    dbcuisines = session.query(Cuisine).order_by(asc(Cuisine.name))
+    dbdishes = showlatestDishesWithCuisine()
+    
+    return render_template('cuisines.html', cuisines=dbcuisines, latestdishes = dbdishes, STATE = getLoginState(), loggedusername=login_session['username'])
+
 
 
 # User Helper Functions
@@ -193,10 +180,10 @@ def getUserID(email):
 
 # Endpoint1 - Show all cuisines
 @app.route('/')
-def showCuisines():
+def showCuisines(username=None):
     dbcuisines = session.query(Cuisine).order_by(asc(Cuisine.name))
     dbdishes = showlatestDishesWithCuisine()
-    return render_template('cuisines.html', cuisines=dbcuisines, latestdishes = dbdishes)
+    return render_template('cuisines.html', cuisines=dbcuisines, latestdishes = dbdishes, STATE = getLoginState(), loggedusername= username)
 
   
 # Fetch latest dish
@@ -245,10 +232,6 @@ def editDish(dish_id, cuisine_id):
         cuisine= session.query(Cuisine).filter_by(id=cuisine_id).one()
         dish = session.query(Dish).filter_by(id=dish_id).one()
         cuisineall = session.query(Cuisine.name).all()
-        print dish.name
-        print dish.description
-        print cuisine.name
-        print cuisineall[0].name
         return render_template('editDishItem.html', dish=dish, cuisine = cuisine, cuisines= cuisineall)
 
 
@@ -265,7 +248,8 @@ def newDish():
         flash('New Menu %s Item Successfully Created' % (newItem.name))
         return redirect(url_for('showDishes', cuisine_id=cuisine.id))
     else:
-        return render_template('addnewdish.html')
+        cuisineall = session.query(Cuisine.name).all()
+        return render_template('addnewdish.html', cuisines= cuisineall )
 
     
 # Delete a dish
@@ -283,8 +267,9 @@ def deleteDish(dish_id):
 # Show dish description
 @app.route('/restaurant/<int:cuisine_id>/dish/<int:dish_id>/', methods=['GET', 'POST'])
 def showDescription(dish_id, cuisine_id):
+    cuisine = session.query(Cuisine).filter_by(id=cuisine_id).one()
     dish = session.query(Dish).filter_by(id=dish_id).one()
-    return render_template('description.html', dish=dish)
+    return render_template('description.html', dish=dish, cuisine= cuisine)
  
 # @app.route('/restaurant/<int:cuisine_id>/dish/new/upload', methods=['GET', 'POST'])
 @app.route('/upload', methods=['GET', 'POST'])

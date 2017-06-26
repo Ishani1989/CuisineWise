@@ -1,18 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link href='http://fonts.googleapis.com/css?family=Roboto:400,300,700' rel='stylesheet' type='text/css'>
       <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
       <link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles1.css') }}">
       <!--LOAD PRE-REQUISITES FOR GOOGLE SIGN IN -->
       <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
       <script src="https://apis.google.com/js/platform.js" async defer></script>
-      <script>
-            function myFunction(dish_id, cuisine_id) {
-               var content = $('#dishname').text();
-               confirm("Are you sure you want to delete "+content+" ?");
-            }
-      </script>
       <!-- END PRE-REQUISITES FOR GOOGLE SIGN IN -->
    </head>
    <body>
@@ -23,6 +18,12 @@
             {% endblock %}
          </div>
       </div>
-      <!--End main.html -->		
+      <!--End main.html -->
+      <footer class="padding-top padding-bottom">
+            <div class="col-md-1"></div>
+            <div class="col-md-11">
+            Contact information: <a href="mailto:someone@example.com">ishmukherjee89@gmail.com</a> 
+            </div>
+      </footer>		
    </body>
 </html>

@@ -21,26 +21,12 @@
 						
 						<textarea class="form-control" maxlength="2000" rows="10" name="recipe" placeholder="Enter recipe for the dish"></textarea>
 					<label for="cuisine">Cuisine:</label>
-					<div class="radio">
-					  <label>
-					    <input type="radio" name="cuisine" id="cuisine1" value="Indian">Indian
-					  </label>
-					</div>
-					<div class="radio">
-					  <label>
-					    <input type="radio" name="cuisine" id="cuisine2" value="Mexican">Mexican
-					  </label>
-					</div>
-					<div class="radio">
-					  <label>
-					    <input type="radio" name="cuisine" id="cuisine3" value="Chinese">Chinese
-					  </label>
-					</div>
-					<div class="radio">
-					  <label>
-					    <input type="radio" name="cuisine" id="cuisine4" value="Thai">Thai
-					  </label>
-					</div>
+					<select name = "cuisine">
+					{% for item in cuisines %}
+     					<option value={{ item[0] }}>{{ item[0] }}
+				    	</option>	
+      				{% endfor %}
+      				</select>
 					<button type="submit" class="btn btn-default" id="submit" type="submit">
 					<span class="glyphicon glyphicon-glass" aria-hidden="true"></span>Create</button>
 				</div>
