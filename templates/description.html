@@ -18,6 +18,11 @@
 			<div class="col-md-7">
 				<p>{{dish.recipe}}</p>
 			</div>
+			{% if dish.user_id == loginid %}
+				<a href='{{url_for('editDishDesc', dish_id=dish.id, cuisine_id = cuisine.id) }}'>Edit
+				</a> | 
+				<a href='{{url_for('deleteDish', dish_id=dish.id) }}'>Delete</a>
+			{% endif %}
 		</div>
 	
 {% endblock %}

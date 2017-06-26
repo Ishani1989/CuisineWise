@@ -20,15 +20,7 @@
   <nav class="navbar navbar-inverse">
       <ul class="nav navbar-nav">
         <li class="active"><a href="http://localhost:5000">Home</a></li>
-        <!--  
-        $( document ).ready(function() {
-        	 name = '{{loggedusername}}';
-        	 if(name!='None'){
-        		 $("#result").html('Welcome ' + name);
-        	 }
-         });
-         -->
-        <li><a href="{{url_for('newDish')}}"><span class="glyphicon glyphicon-glass" aria-hidden="true"></span>Add New Dish</a></li>
+        <li id="newDish"><a href="{{url_for('newDish')}}"><span class="glyphicon glyphicon-glass" aria-hidden="true"></span>Add New Dish</a></li>
         <li style="float:right;">
           <div class="col-md-1  text-right">
             <!-- Need to remove -->
@@ -36,7 +28,7 @@
         </li>
         <li></li>
         <li></li>
-        <li><a href="{{url_for('gdisconnect')}}">Logout</a></li>
+        <li id="logout"><a href="{{url_for('gdisconnect')}}">Logout</a></li>
       </ul>
   </nav>
 
@@ -74,5 +66,18 @@
             }
           } 
         }    
+
+           $( document ).ready(function() {
+            $("#newDish").hide();
+            $("#logout").hide();
+           name = '{{loggedusername}}';
+           url = '{{url_for("newDish")}}';
+           if(name!='None'){
+             $("#result").html('Welcome ' + name);
+             $("#newDish").show();
+             $("#logout").show();
+             //$("ul").append('<li><a href="/restaurant/dish/new/">Add New Dish</a></li>');
+            }
+          });
 </script>
   <!--End header.html -->

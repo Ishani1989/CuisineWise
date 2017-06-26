@@ -226,9 +226,9 @@ def showCuisines():
     print 'showCuisines'
     dbcuisines = session.query(Cuisine).order_by(asc(Cuisine.name))
     dbdishes = showlatestDishesWithCuisine()
-    
     username=login_session.get('username')
     print username
+    print dbcuisines[2].name
 
     return render_template('cuisines.html', cuisines=dbcuisines, latestdishes = dbdishes, STATE = getLoginState(), loggedusername=username)
 
@@ -236,7 +236,7 @@ def showCuisines():
 #session.query(User, Country.country).join(Country).filter(User.user_email == 'abc@def.com').first()
 def showlatestDishesWithCuisine():
     # dbdishes = session.query(Dish.name, Dish.cuisine, Dish.created_on).order_by(Dish.created_on.desc()).all()
-    dbdishes = session.query(Dish.id.label('dish_id'), Dish.name.label('dish_name'), Cuisine.id.label('cuisine_id'),  Cuisine.name.label('cuisine_name'), Dish.created_on).join(Cuisine).limit(5).all()
+    dbdishes = session.query(Dish.id.label('dish_id'), Dish.name.label('dish_name'), Cuisine.id.label('cuisine_id'),  Cuisine.name.label('cuisine_name'), Dish.created_on).join(Cuisine).order_by(Dish.created_on.desc()).limit(5).all()
         
     for dish in dbdishes:
         print dish.dish_name, dish.cuisine_name, dish.created_on
@@ -251,13 +251,15 @@ def showDishes(cuisine_id):
     cuisine = session.query(Cuisine).filter_by(id=cuisine_id).one()
     dishes = session.query(Dish).filter_by(cuisine_id=cuisine_id).all()
     username=login_session.get('username')
-    return render_template('cuisinedishes.html', items=dishes, cuisine=cuisine, loggedusername=username)
+    loginid=login_session.get('email')
+    return render_template('cuisinedishes.html', items=dishes, cuisine=cuisine, loggedusername=username, loginid=loginid)
 
 
 # Edit a restaurant
 @app.route('/cuisines/<int:cuisine_id>/<int:dish_id>/edit/', methods=['GET', 'POST'])
 def editDish(dish_id, cuisine_id):
      username=login_session.get('username')
+     loginid=login_session.get('email')
      if request.method == 'POST':
         print str(request)
         cuisine = session.query(Cuisine).filter_by(name=request.form['cuisine']).one()
@@ -278,16 +280,41 @@ def editDish(dish_id, cuisine_id):
         cuisineall = session.query(Cuisine.name).all()
         return render_template('editDishItem.html', dish=dish, cuisine = cuisine, cuisines= cuisineall, loggedusername=username)
 
+@app.route('/cuisines/<int:cuisine_id>/<int:dish_id>/editdesc/', methods=['GET', 'POST'])
+def editDishDesc(dish_id, cuisine_id):
+     username=login_session.get('username')
+     loginid=login_session.get('email')
+     if request.method == 'POST':
+        print str(request)
+        cuisine = session.query(Cuisine).filter_by(name=request.form['cuisine']).one()
+        mydish = session.query(Dish).filter_by(id=dish_id).one()
+        timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        mydish.name=request.form['name']
+        mydish.description=request.form['description']
+        mydish.cuisine_id=cuisine.id
+        mydish.recipe=request.form['recipe']
+        mydish.modified_on=timenow
+        session.add(mydish)
+        session.commit()
+        flash('%s Item Successfully Updated' % (mydish.name))
+        return redirect(url_for('showDescription', cuisine_id=cuisine.id, dish_id=mydish.id, loggedusername=username))
+     else:
+        cuisine= session.query(Cuisine).filter_by(id=cuisine_id).one()
+        dish = session.query(Dish).filter_by(id=dish_id).one()
+        cuisineall = session.query(Cuisine.name).all()
+        return render_template('editDishItem.html', dish=dish, cuisine = cuisine, cuisines= cuisineall, loggedusername=username)
+
 
 # Create a new menu item
 @app.route('/restaurant/dish/new/', methods=['GET', 'POST'])
 def newDish():
     username=login_session.get('username')
+    loginid=login_session.get('email')
     #return render_template('addnewdish.html')
     if request.method == 'POST':
         cuisine = session.query(Cuisine).filter_by(name=request.form['cuisine']).one()
         timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        newItem = Dish(name=request.form['name'], picurl="", description=request.form['description'], cuisine_id=cuisine.id, recipe=request.form['recipe'], created_on=timenow, modified_on=timenow)
+        newItem = Dish(name=request.form['name'], picurl="", description=request.form['description'], cuisine_id=cuisine.id, recipe=request.form['recipe'], created_on=timenow, modified_on=timenow, user_id=loginid)
         session.add(newItem)
         session.commit()
         flash('New Menu %s Item Successfully Created' % (newItem.name))
@@ -301,6 +328,7 @@ def newDish():
 @app.route('/restaurant/<int:dish_id>/delete', methods=['GET', 'POST'])
 def deleteDish(dish_id):
     username=login_session.get('username')
+    loginid=login_session.get('email')
     dish = session.query(Dish).filter_by(id=dish_id).one()
     name = dish.name
     if request.method == 'POST':
@@ -314,9 +342,10 @@ def deleteDish(dish_id):
 @app.route('/restaurant/<int:cuisine_id>/dish/<int:dish_id>/', methods=['GET', 'POST'])
 def showDescription(dish_id, cuisine_id):
     username=login_session.get('username')
+    loginid=login_session.get('email')
     cuisine = session.query(Cuisine).filter_by(id=cuisine_id).one()
     dish = session.query(Dish).filter_by(id=dish_id).one()
-    return render_template('description.html', dish=dish, cuisine= cuisine, loggedusername=username)
+    return render_template('description.html', dish=dish, cuisine= cuisine, loggedusername=username, loginid= loginid)
 
 
 @app.route('/cuisines/JSON')
@@ -339,113 +368,7 @@ def showlatestDishesWithCuisineJSON():
         
     return jsonify(Cuisines=[r.serialize for r in session.query(Dish).order_by(Dish.created_on.desc())])
 
-'''
-#JSON APIs to view Restaurant Information
-@app.route('/restaurant/<int:restaurant_id>/menu/JSON')
-def restaurantMenuJSON(restaurant_id):
-    restaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
-    items = session.query(Dish).filter_by(restaurant_id = restaurant_id).all()
-    return jsonify(MenuItems=[i.serialize for i in items])
-@app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/JSON')
-def menuItemJSON(restaurant_id, menu_id):
-    Menu_Item = session.query(Dish).filter_by(id = menu_id).one()
-    return jsonify(Menu_Item = Menu_Item.serialize)
-@app.route('/restaurant/JSON')
-def restaurantsJSON():
-    restaurants = session.query(Restaurant).all()
-    return jsonify(restaurants= [r.serialize for r in restaurants])
-#Show all restaurants
-@app.route('/')
-@app.route('/restaurant/')
-def showRestaurants():
-  restaurants = session.query(Restaurant).order_by(asc(Restaurant.name))
-  return render_template('restaurants.html', restaurants = restaurants)
-#Create a new restaurant
-@app.route('/restaurant/new/', methods=['GET','POST'])
-def newRestaurant():
-  if request.method == 'POST':
-      newRestaurant = Restaurant(name = request.form['name'])
-      session.add(newRestaurant)
-      flash('New Restaurant %s Successfully Created' % newRestaurant.name)
-      session.commit()
-      return redirect(url_for('showRestaurants'))
-  else:
-      return render_template('newRestaurant.html')
-#Edit a restaurant
-@app.route('/restaurant/<int:restaurant_id>/edit/', methods = ['GET', 'POST'])
-def editRestaurant(restaurant_id):
-  editedRestaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
-  if request.method == 'POST':
-      if request.form['name']:
-        editedRestaurant.name = request.form['name']
-        flash('Restaurant Successfully Edited %s' % editedRestaurant.name)
-        return redirect(url_for('showRestaurants'))
-  else:
-    return render_template('editRestaurant.html', restaurant = editedRestaurant)
-#Delete a restaurant
-@app.route('/restaurant/<int:restaurant_id>/delete/', methods = ['GET','POST'])
-def deleteRestaurant(restaurant_id):
-  restaurantToDelete = session.query(Restaurant).filter_by(id = restaurant_id).one()
-  if request.method == 'POST':
-    session.delete(restaurantToDelete)
-    flash('%s Successfully Deleted' % restaurantToDelete.name)
-    session.commit()
-    return redirect(url_for('showRestaurants', restaurant_id = restaurant_id))
-  else:
-    return render_template('deleteRestaurant.html',restaurant = restaurantToDelete)
-#Show a restaurant menu
-@app.route('/restaurant/<int:restaurant_id>/')
-@app.route('/restaurant/<int:restaurant_id>/menu/')
-def showMenu(restaurant_id):
-    restaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
-    items = session.query(Dish).filter_by(restaurant_id = restaurant_id).all()
-    return render_template('menu.html', items = items, restaurant = restaurant)
-     
-#Create a new menu item
-@app.route('/restaurant/<int:restaurant_id>/menu/new/',methods=['GET','POST'])
-def newMenuItem(restaurant_id):
-  restaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
-  if request.method == 'POST':
-      newItem = Dish(name = request.form['name'], description = request.form['description'], price = request.form['price'], course = request.form['course'], restaurant_id = restaurant_id)
-      session.add(newItem)
-      session.commit()
-      flash('New Menu %s Item Successfully Created' % (newItem.name))
-      return redirect(url_for('showMenu', restaurant_id = restaurant_id))
-  else:
-      return render_template('newmenuitem.html', restaurant_id = restaurant_id)
-#Edit a menu item
-@app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/edit', methods=['GET','POST'])
-def editMenuItem(restaurant_id, menu_id):
-    editedItem = session.query(Dish).filter_by(id = menu_id).one()
-    restaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
-    if request.method == 'POST':
-        if request.form['name']:
-            editedItem.name = request.form['name']
-        if request.form['description']:
-            editedItem.description = request.form['description']
-        if request.form['price']:
-            editedItem.price = request.form['price']
-        if request.form['course']:
-            editedItem.course = request.form['course']
-        session.add(editedItem)
-        session.commit() 
-        flash('Menu Item Successfully Edited')
-        return redirect(url_for('showMenu', restaurant_id = restaurant_id))
-    else:
-        return render_template('editmenuitem.html', restaurant_id = restaurant_id, menu_id = menu_id, item = editedItem)
-#Delete a menu item
-@app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/delete', methods = ['GET','POST'])
-def deleteMenuItem(restaurant_id,menu_id):
-    restaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
-    itemToDelete = session.query(Dish).filter_by(id = menu_id).one() 
-    if request.method == 'POST':
-        session.delete(itemToDelete)
-        session.commit()
-        flash('Menu Item Successfully Deleted')
-        return redirect(url_for('showMenu', restaurant_id = restaurant_id))
-    else:
-        return render_template('deleteMenuItem.html', item = itemToDelete)
-'''
+
 
 
 if __name__ == '__main__':

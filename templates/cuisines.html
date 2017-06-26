@@ -20,28 +20,28 @@
    {% endif %}
    {% endwith %}
 </div>
-<div class="padding-top">
-   
-</div>
+
 
    <div class="left col-md-2">
+   <h2>Cuisines</h2>
       {% for cuisine in cuisines %}
       <a href = "{{url_for('showDishes', cuisine_id = cuisine.id)}}">
             <div class="restaurant-list">
-               <h3>{{cuisine.name}}</h3>
+               <h4>{{cuisine.name}}</h4>
             </div>
       </a>
       {% endfor %}
    </div>
    <div class="right col-md-10">
+      <h2>Our latest additions:</h2>
       {% for dish in latestdishes %}
+         <a href = "{{url_for('showDescription', dish_id=dish.dish_id, cuisine_id= dish.cuisine_id)}}">
             <div class="row dishlist">
                <div>
-                  <a href = "{{url_for('showDescription', dish_id=dish.dish_id, cuisine_id= dish.cuisine_id)}}">
-                     {{dish.dish_name}}({{dish.cuisine_name}})
-                  </a>
+                     <h4>{{dish.dish_name}} ({{dish.cuisine_name}})</h4>  
                </div>
             </div>
+         </a>
       {% endfor %}
    </div>
 

@@ -19,14 +19,15 @@
 
 					<label for="recipe">Recipe:</label>
 						
-						<textarea class="form-control" maxlength="2000" rows="10" name="recipe" placeholder="Enter recipe for the dish"></textarea>
+						<textarea class="form-control" maxlength="2000" rows="10" name="recipe" placeholder="Enter recipe for the dish"></textarea></br>
 					<label for="cuisine">Cuisine:</label>
 					<select name = "cuisine">
+						<option value="" disabled selected>Select...</option>
 					{% for item in cuisines %}
      					<option value={{ item[0] }}>{{ item[0] }}
 				    	</option>	
       				{% endfor %}
-      				</select>
+      				</select></br></br>
 					<button type="submit" class="btn btn-default" id="submit" type="submit">
 					<span class="glyphicon glyphicon-glass" aria-hidden="true"></span>Create</button>
 				</div>

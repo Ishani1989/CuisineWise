@@ -33,8 +33,11 @@
 							<div class="menu-item">
 								<h3 id="dishname">{{i.name}}</h3>
 								<p>{{i.description}}</p>
-								<a href='{{url_for('editDish', dish_id=i.id, cuisine_id = cuisine.id) }}'>Edit</a> | 
-								<a href='{{url_for('deleteDish', dish_id=i.id) }}'>Delete</a>
+								{% if i.user_id == loginid %}
+									<a href='{{url_for('editDish', dish_id=i.id, cuisine_id = cuisine.id) }}'>Edit
+									</a> | 
+									<a href='{{url_for('deleteDish', dish_id=i.id) }}'>Delete</a>
+								{% endif %}
 							</div>
 						</a>
 					{% endfor %}
