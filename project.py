@@ -144,11 +144,14 @@ def gconnect():
       login_session['user_id'] = user_id
 
     print ('Before returning')
-  
-    dbcuisines = session.query(Cuisine).order_by(asc(Cuisine.name))
-    dbdishes = showlatestDishesWithCuisine()
+
+    data = {}
+    data['userid'] = login_session['email']
+    data['username'] = login_session['username']
     
-    return render_template('cuisines.html', cuisines=dbcuisines, latestdishes = dbdishes, STATE = getLoginState(), loggedusername=login_session['username'])
+    json_data = json.dumps(data)
+    return json_data
+    #return render_template('cuisines.html', cuisines=dbcuisines, latestdishes = dbdishes, STATE = getLoginState(), loggedusername=login_session['username'])
 
 
 
@@ -180,10 +183,15 @@ def getUserID(email):
 
 # Endpoint1 - Show all cuisines
 @app.route('/')
-def showCuisines(username=None):
+def showCuisines():
+    print 'showCuisines'
     dbcuisines = session.query(Cuisine).order_by(asc(Cuisine.name))
     dbdishes = showlatestDishesWithCuisine()
-    return render_template('cuisines.html', cuisines=dbcuisines, latestdishes = dbdishes, STATE = getLoginState(), loggedusername= username)
+    
+    username=login_session.get('username')
+    print username
+
+    return render_template('cuisines.html', cuisines=dbcuisines, latestdishes = dbdishes, STATE = getLoginState(), loggedusername=username)
 
   
 # Fetch latest dish

@@ -7,7 +7,7 @@
 h1 {
 	font-family: "Helvetica Neue Light", Roboto, Helvetica, Arial, sans-serif;
 	font-size: 50px;
-	color: 'white';
+	color: white;
 	line-height: 60px;
 	font-weight: 300;
 }
@@ -26,6 +26,11 @@ html, body{
 
 .container{
 	height: 100%;
+}
+
+.dishlist{
+	font-size: 18px;
+	padding: 10px;
 }
 
  p {
@@ -145,7 +150,7 @@ html, body{
 .banner h1 {
 	margin: 10px 0;
 	padding: 10px;	
-	color : red;
+	color : green;
 }
 
 .navbar-inverse .navbar-nav>li>a {

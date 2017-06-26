@@ -35,7 +35,7 @@
    </div>
    <div class="right col-md-10">
       {% for dish in latestdishes %}
-            <div class="row">
+            <div class="row dishlist">
                <div>
                   <a href = "{{url_for('showDescription', dish_id=dish.dish_id, cuisine_id= dish.cuisine_id)}}">
                      {{dish.dish_name}}({{dish.cuisine_name}})
