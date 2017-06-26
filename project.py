@@ -44,6 +44,8 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+username=""
+
 # Create anti-forgery state token
 @app.route('/login')
 def getLoginState():
@@ -111,7 +113,9 @@ def gconnect():
         print "Token's client ID does not match app's."
         response.headers['Content-Type'] = 'application/json'
         return response
-
+    
+    stored_access_token = login_session.get('access_token')
+    stored_gplus_id = login_session.get('gplus_id')
     stored_credentials = login_session.get('credentials')
     stored_gplus_id = login_session.get('gplus_id')
     '''
@@ -123,6 +127,8 @@ def gconnect():
 
     # Store the access token in the session for later use.
     #login_session['credentials'] = credentials
+    # Store the access token in the session for later use.
+    login_session['access_token'] = credentials.access_token
     login_session['gplus_id'] = gplus_id
 
     # Get user info
@@ -140,8 +146,8 @@ def gconnect():
     # see if user exists, if not make a new user
     user_id = getUserID(login_session['email'])
     if not user_id:
-      user_id = createUser(login_session)
-      login_session['user_id'] = user_id
+        user_id = createUser(login_session)
+        login_session['user_id'] = user_id
 
     print ('Before returning')
 
@@ -153,10 +159,7 @@ def gconnect():
     return json_data
     #return render_template('cuisines.html', cuisines=dbcuisines, latestdishes = dbdishes, STATE = getLoginState(), loggedusername=login_session['username'])
 
-
-
 # User Helper Functions
-
 
 def createUser(login_session):
     newUser = User(name=login_session['username'], email=login_session[
@@ -179,6 +182,42 @@ def getUserID(email):
     except:
         return None
 
+@app.route('/gdisconnect')
+def gdisconnect():
+    access_token = login_session.get('access_token')
+    if access_token != None:
+        print 'In gdisconnect access token is - ' +  access_token
+        print 'User name is: ' 
+        print login_session['username']
+        if access_token is None:
+            print 'Access Token is None'
+            response = make_response(json.dumps('Current user not connected.'), 401)
+            response.headers['Content-Type'] = 'application/json'
+            return response
+        url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+        h = httplib2.Http()
+        result = h.request(url, 'GET')[0]
+        print 'result is '
+        print result
+        if result['status'] == '200':
+            del login_session['access_token'] 
+            del login_session['gplus_id']
+            del login_session['username']
+            del login_session['email']
+            del login_session['picture']
+            response = make_response(json.dumps('Successfully disconnected.'), 200)
+            response.headers['Content-Type'] = 'application/json'
+            return response
+        else:
+        
+            response = make_response(json.dumps('Failed to revoke token for given user.', 400))
+            response.headers['Content-Type'] = 'application/json'
+            return response
+    else:
+        return 'User is not logged in'
+        
+        
+            
 
 
 # Endpoint1 - Show all cuisines
@@ -193,11 +232,6 @@ def showCuisines():
 
     return render_template('cuisines.html', cuisines=dbcuisines, latestdishes = dbdishes, STATE = getLoginState(), loggedusername=username)
 
-  
-# Fetch latest dish
-# select a.name,  b.name, a.created_on from dish as a join cuisine as b on a.cuisine_id = b.id order by a.created_on desc;
-# need to remove
-#@app.route('/latestDishes')
 
 #session.query(User, Country.country).join(Country).filter(User.user_email == 'abc@def.com').first()
 def showlatestDishesWithCuisine():
@@ -216,12 +250,14 @@ def showlatestDishesWithCuisine():
 def showDishes(cuisine_id):
     cuisine = session.query(Cuisine).filter_by(id=cuisine_id).one()
     dishes = session.query(Dish).filter_by(cuisine_id=cuisine_id).all()
-    return render_template('cuisinedishes.html', items=dishes, cuisine=cuisine)
+    username=login_session.get('username')
+    return render_template('cuisinedishes.html', items=dishes, cuisine=cuisine, loggedusername=username)
 
 
 # Edit a restaurant
 @app.route('/cuisines/<int:cuisine_id>/<int:dish_id>/edit/', methods=['GET', 'POST'])
 def editDish(dish_id, cuisine_id):
+     username=login_session.get('username')
      if request.method == 'POST':
         print str(request)
         cuisine = session.query(Cuisine).filter_by(name=request.form['cuisine']).one()
@@ -235,17 +271,18 @@ def editDish(dish_id, cuisine_id):
         session.add(mydish)
         session.commit()
         flash('%s Item Successfully Updated' % (mydish.name))
-        return redirect(url_for('showDishes', cuisine_id=cuisine.id))
+        return redirect(url_for('showDishes', cuisine_id=cuisine.id, loggedusername=username))
      else:
         cuisine= session.query(Cuisine).filter_by(id=cuisine_id).one()
         dish = session.query(Dish).filter_by(id=dish_id).one()
         cuisineall = session.query(Cuisine.name).all()
-        return render_template('editDishItem.html', dish=dish, cuisine = cuisine, cuisines= cuisineall)
+        return render_template('editDishItem.html', dish=dish, cuisine = cuisine, cuisines= cuisineall, loggedusername=username)
 
 
 # Create a new menu item
 @app.route('/restaurant/dish/new/', methods=['GET', 'POST'])
 def newDish():
+    username=login_session.get('username')
     #return render_template('addnewdish.html')
     if request.method == 'POST':
         cuisine = session.query(Cuisine).filter_by(name=request.form['cuisine']).one()
@@ -254,48 +291,32 @@ def newDish():
         session.add(newItem)
         session.commit()
         flash('New Menu %s Item Successfully Created' % (newItem.name))
-        return redirect(url_for('showDishes', cuisine_id=cuisine.id))
+        return redirect(url_for('showDishes', cuisine_id=cuisine.id, loggedusername=username))
     else:
         cuisineall = session.query(Cuisine.name).all()
-        return render_template('addnewdish.html', cuisines= cuisineall )
+        return render_template('addnewdish.html', cuisines= cuisineall, loggedusername=username )
 
     
 # Delete a dish
 @app.route('/restaurant/<int:dish_id>/delete', methods=['GET', 'POST'])
 def deleteDish(dish_id):
+    username=login_session.get('username')
     dish = session.query(Dish).filter_by(id=dish_id).one()
     name = dish.name
     if request.method == 'POST':
         session.delete(dish)
         session.commit()
         flash(' %s dish Successfully deleted' % (name))
-        return redirect(url_for('showDishes', cuisine_id=dish.cuisine_id))
+        return redirect(url_for('showDishes', cuisine_id=dish.cuisine_id, loggedusername = username))
     else:
-        return render_template('deletemenuitem.html', dish = dish, cuisine_id= dish.cuisine_id)
+        return render_template('deletemenuitem.html', dish = dish, cuisine_id= dish.cuisine_id, loggedusername=username)
 # Show dish description
 @app.route('/restaurant/<int:cuisine_id>/dish/<int:dish_id>/', methods=['GET', 'POST'])
 def showDescription(dish_id, cuisine_id):
+    username=login_session.get('username')
     cuisine = session.query(Cuisine).filter_by(id=cuisine_id).one()
     dish = session.query(Dish).filter_by(id=dish_id).one()
-    return render_template('description.html', dish=dish, cuisine= cuisine)
- 
-# @app.route('/restaurant/<int:cuisine_id>/dish/new/upload', methods=['GET', 'POST'])
-@app.route('/upload', methods=['GET', 'POST'])
-def upload_file():
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            print file.filename
-            return filename
-            #return jsonify(restaurants=['successfully uploaded'])
-            # return redirect(url_for('showDescription', cuisine_id = cuisine_id, dish_id = dish_id))
+    return render_template('description.html', dish=dish, cuisine= cuisine, loggedusername=username)
 
 
 @app.route('/cuisines/JSON')

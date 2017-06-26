@@ -161,7 +161,10 @@ html, body{
 	background: linear-gradient(to right, #9CCF7B 0%, #E8FFC0 100%);
 	background-color: #9CCF7B;
 }
-
+#result{
+	padding-top: 10px;
+	color :#1AA48B;
+}
 .navbar-inverse .navbar-brand {
 	color: red;
 }
