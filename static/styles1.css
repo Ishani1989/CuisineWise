@@ -73,6 +73,8 @@ select {
     border-style: 1 px solid #3b9700;
     min-height: 100vh;
     overflow-y: hidden;
+    padding-left: 0px;
+    padding-right: 0px; 
 }
 
 .padding-top {

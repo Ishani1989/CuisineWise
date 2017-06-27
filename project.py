@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import os
 from flask import Flask, render_template, request, redirect, jsonify, \
     url_for, flash, send_from_directory
 from sqlalchemy import create_engine, asc
@@ -11,14 +10,8 @@ from flask import session as login_session
 from datetime import datetime
 import random
 import string
-
 import logging
 from logging.handlers import RotatingFileHandler
-
-# IMPORTS FOR THIS STEP
-
-from oauth2client.client import flow_from_clientsecrets
-from oauth2client.client import FlowExchangeError
 import httplib2
 import json
 from flask import make_response
@@ -28,7 +21,6 @@ import requests
 # httplib2.debuglevel = 4
 
 app = Flask(__name__)
-
 CLIENT_ID = json.loads(open('client_secrets.json',
                             'r').read())['web']['client_id']
 APPLICATION_NAME = 'Cuisine Wise Application'
@@ -40,8 +32,6 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
-username = ''
-
 
 # Create anti-forgery state token
 def getLoginState():
@@ -51,137 +41,24 @@ def getLoginState():
     print 'loggedin state - ' + login_session['state']
     return state
 
+
 @app.route('/gsignin2connect', methods=['POST'])
 def gsignin2connect():
     print 'gsignin2connect'
     app.logger.debug('gsignin2connect called')
-    
     state = request.args.get('state')
     idtoken = request.form.get('idtoken')
     print 'data - ' + str(idtoken)
-    
     url = \
         'https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=%s' \
         % idtoken
     h = httplib2.Http()
     data = json.loads(h.request(url, 'GET')[1])
-    print data 
-    
+
     login_session['username'] = data['name']
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
     login_session['userid'] = data['sub']
-    
-    print 'login session - ' + login_session.get('username')
-    
-    data = {}
-    data['userid'] = login_session['email']
-    data['username'] = login_session['username']
-
-    json_data = json.dumps(data)
-    return json_data
-        
-    
-    
-@app.route('/gconnect', methods=['POST'])
-def gconnect():
-    print 'inside gconnect'
-    print 'state - ' + login_session.get('state')
-
-    # Validate state token
-
-    if request.args.get('state') != login_session['state']:
-        response = make_response(json.dumps('Invalid state parameter.'), 401)
-        print 'state error'
-        response.headers['Content-Type'] = 'application/json'
-        return response
-
-    # Obtain authorization code
-
-    code = request.data
-    print code
-
-    try:
-
-        # Upgrade the authorization code into a credentials object
-
-        oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
-        print oauth_flow.redirect_uri
-        oauth_flow.redirect_uri = 'postmessage'
-        credentials = oauth_flow.step2_exchange(code)
-    except FlowExchangeError:
-        response = make_response(json.dumps('''Failed to upgrade the
-                                            authorization code.'''), 401)
-        print 'flowexchange error'
-        response.headers['Content-Type'] = 'application/json'
-        return response
-
-    # Check that the access token is valid.
-
-    access_token = credentials.access_token
-    url = \
-        'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' \
-        % access_token
-    h = httplib2.Http()
-    result = json.loads(h.request(url, 'GET')[1])
-
-    # If there was an error in the access token info, abort.
-
-    if result.get('error') is not None:
-        print '500 error ' + str(result.get('error'))
-        response = make_response(json.dumps(result.get('error')), 500)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-
-    # Verify that the access token is used for the intended user.
-
-    gplus_id = credentials.id_token['sub']
-    if result['user_id'] != gplus_id:
-        response = make_response(json.dumps('''Token's user ID doesn't match
-                                            given user ID.'''), 401)
-        print 'user ids dont match'
-        response.headers['Content-Type'] = 'application/json'
-        return response
-
-    # Verify that the access token is valid for this app.
-
-    if result['issued_to'] != CLIENT_ID:
-        response = make_response(json.dumps('''Token's client ID does not
-                                            match app's.'''), 401)
-        print "Token's client ID does not match app's."
-        response.headers['Content-Type'] = 'application/json'
-        return response
-
-    stored_access_token = login_session.get('access_token')
-    stored_gplus_id = login_session.get('gplus_id')
-    stored_credentials = login_session.get('credentials')
-    stored_gplus_id = login_session.get('gplus_id')
-
-    # Store the access token in the session for later use.
-    # login_session['credentials'] = credentials
-    # Store the access token in the session for later use.
-
-    login_session['access_token'] = credentials.access_token
-    login_session['gplus_id'] = gplus_id
-
-    # Get user info
-
-    userinfo_url = 'https://www.googleapis.com/oauth2/v1/userinfo'
-    params = {'access_token': credentials.access_token, 'alt': 'json'}
-    answer = requests.get(userinfo_url, params=params)
-
-    data = answer.json()
-    
-    login_session['username'] = data['name']
-    login_session['picture'] = data['picture']
-    login_session['email'] = data['email']
-
-    # see if user exists, if not make a new user
-
-    user_id = getUserID(login_session['email'])
-    if not user_id:
-        user_id = createUser(login_session)
-        login_session['user_id'] = user_id
 
     data = {}
     data['userid'] = login_session['email']
@@ -192,17 +69,6 @@ def gconnect():
 
 
 # User Helper Functions
-
-def createUser(login_session):
-    newUser = User(name=login_session['username'],
-                   email=login_session['email'],
-                   picture=login_session['picture'])
-    session.add(newUser)
-    session.commit()
-    user = session.query(User).filter_by(email=login_session['email']).one()
-    return user.id
-
-
 def getUserInfo(user_id):
     user = session.query(User).filter_by(id=user_id).one()
     return user
@@ -221,42 +87,27 @@ def gdisconnect():
     print 'gdisconnect method'
     loggedin_username = login_session.get('username')
     print 'User name is: ' + str(loggedin_username)
-    
+
     if loggedin_username is not None:
-        url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' \
-            % login_session['access_token']
-        h = httplib2.Http()
-        result = h.request(url, 'GET')[0]
-        print result
-        if result['status'] == '200':
-            del login_session['state']
-            del login_session['access_token']
-            del login_session['gplus_id']
-            del login_session['username']
-            del login_session['email']
-            del login_session['picture']
-            response = \
-                make_response(json.dumps('Successfully disconnected.'),
-                              200)
-            response.headers['Content-Type'] = 'application/json'
-            flash("You are now logged out.")
-            return response 
-        else:
-            response = make_response(json.dumps('''Failed to revoke token for
-                                                given user.''', 400))
-            response.headers['Content-Type'] = 'application/json'
-            return response
+        del login_session['state']
+        del login_session['username']
+        del login_session['email']
+        del login_session['picture']
+        response = make_response(json.dumps('''Successfully
+                                 disconnected.'''), 200)
+        response.headers['Content-Type'] = 'application/json'
+        flash("You are now logged out.")
+        return response
     else:
         response = make_response(json.dumps('''Current user not
                                                 connected.'''), 200)
         response.headers['Content-Type'] = 'application/json'
-        return response    
-# Endpoint1 - Show all cuisines
+        return response
 
+
+# Endpoint1 - Show all cuisines
 @app.route('/')
 def showCuisines():
-    app.logger.debug('showCuisines called')
-    print 'showCuisines'
     dbcuisines = session.query(Cuisine).order_by(asc(Cuisine.name))
     dbdishes = showlatestDishesWithCuisine()
     username = login_session.get('username')
@@ -264,11 +115,11 @@ def showCuisines():
     print 'state - ' + str(login_session.get('state'))
     if login_session.get('state') is None:
         getLoginState()
-        
     return render_template('cuisines.html', cuisines=dbcuisines,
                            latestdishes=dbdishes,
                            STATE=login_session.get('state'),
                            loggedusername=username)
+
 
 def showlatestDishesWithCuisine():
     dbdishes = session.query(
@@ -283,7 +134,6 @@ def showlatestDishesWithCuisine():
 
 
 # Endpoint2 -  Show dishes specific to Cuisine/Cuisine_id
-
 @app.route('/cuisines/<int:cuisine_id>/dish/')
 def showDishes(cuisine_id):
     cuisine = session.query(Cuisine).filter_by(id=cuisine_id).one()
@@ -296,7 +146,6 @@ def showDishes(cuisine_id):
 
 
 # Edit a restaurant
-
 @app.route('/cuisines/<int:cuisine_id>/<int:dish_id>/edit/',
            methods=['GET', 'POST'])
 def editDish(dish_id, cuisine_id):
@@ -306,7 +155,6 @@ def editDish(dish_id, cuisine_id):
         return showCuisines()
     else:
         if request.method == 'POST':
-            print str(request)
             cuisine = session.query(Cuisine).filter_by(name=request.form
                                                        ['cuisine']).one()
             mydish = session.query(Dish).filter_by(id=dish_id).one()
@@ -339,7 +187,6 @@ def editDishDesc(dish_id, cuisine_id):
         return showCuisines()
     else:
         if request.method == 'POST':
-            print str(request)
             cuisine = session.query(Cuisine).filter_by(name=request.form
                                                        ['cuisine']).one()
             mydish = session.query(Dish).filter_by(id=dish_id).one()
@@ -399,7 +246,6 @@ def newDish():
 
 
 # Delete a dish
-
 @app.route('/restaurant/<int:dish_id>/delete', methods=['GET', 'POST'])
 def deleteDish(dish_id):
     username = login_session.get('username')
@@ -459,14 +305,15 @@ def showlatestDishesWithCuisineJSON():
                    session.query(Dish).order_by(Dish.created_on.desc())])
 
 if __name__ == '__main__':
-    handler = RotatingFileHandler('cuisinewise.log', maxBytes=10000, backupCount=1)
+    handler = RotatingFileHandler('cuisinewise.log',
+                                  maxBytes=10000, backupCount=1)
     handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    formatter = logging.Formatter('''%(asctime)s - %(name)s -
+                                    %(levelname)s - %(message)s''')
     handler.setFormatter(formatter)
     app.logger.addHandler(handler)
     app.logger.info('Application started')
-    
+
     app.secret_key = 'my_super_secret_key'
     app.debug = True
     app.run(host='0.0.0.0', port=5000)
-    

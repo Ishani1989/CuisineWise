@@ -1,153 +1,95 @@
-<script>
-	function onSignIn(googleUser) {
-		  var profile = googleUser.getBasicProfile();
-		  console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
-		  console.log('Name: ' + profile.getName());
-		  console.log('Image URL: ' + profile.getImageUrl());
-		  console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
-		  
-		  // The ID token you need to pass to your backend:
-	      var id_token = googleUser.getAuthResponse().id_token;
-	      console.log("ID Token: " + id_token);
-	      
-	      /*
-	      */
-	      console.log('{{loggedusername}}');
-          name = '{{loggedusername}}';
-          if(name=='None'){
-    	      var xhr = new XMLHttpRequest();
-    	      xhr.open('POST', '/gsignin2connect?state={{STATE}}');
-    	      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    	      xhr.onload = function() {
-    	        console.log('Signed in as: ' + xhr.responseText);
-    	        window.location.href = "/";
-    	      };
-    	      xhr.send('idtoken=' + id_token);
-    	      
-          }else{
-              console.log('gconnect call was skipped');
-          }
-	}
-</script>
 
-  <!--Start header.html -->
-  <div class="row">
-     <div class="col-md-6">
-     </div>
-     <div id="result" class="col-md-3">
-     </div>
-     <meta name="google-signin-client_id" content="893057848592-c4dplknr2tfvbui5q817a97a88qitj2l.apps.googleusercontent.com">
-     <div class="g-signin2 col-md-2" data-onsuccess="onSignIn"></div>
-     
-     
-     <!-- 
-     <div class="g-signin2 col-md-2" data-onsuccess="onSignIn">
-     </div>
-        <meta name="google-signin-scope" content="openid email"/>
-        <meta name="google-signin-clientid" content="893057848592-c4dplknr2tfvbui5q817a97a88qitj2l.apps.googleusercontent.com"/>
-        <meta name="google-signin-redirecturi" content="postmessage"/>
-        <meta name="google-signin-accesstype" content="offline"/>
-        <meta name="google-signin-cookiepolicy" content="single_host_origin"/>
-        <meta name="google-signin-callback" content="signInCallback"/>
-        <meta name="google-signin-approvalprompt" content="force"/>
-     -->   
-        <div id="logout"><button type="button" class="btn btn-default" onclick="disconnect()">Logout</button></div>   
-  </div><!-- end of row -->
+<!--Start header.html -->
+<div class="row">
+    <div class="col-md-6">
+    </div>
+    <div id="result" class="col-md-3">
+    </div>
+    <meta name="google-signin-client_id" content="893057848592-c4dplknr2tfvbui5q817a97a88qitj2l.apps.googleusercontent.com">
+    <div class="g-signin2 col-md-2" data-onsuccess="onSignIn"></div>
 
-  <nav class="navbar navbar-inverse">
-      <ul class="nav navbar-nav">
+    <div id="logout"><button type="button" class="btn btn-default" onclick="disconnect()">Logout</button></div>
+</div>
+<!-- end of row -->
+
+<nav class="navbar navbar-inverse">
+    <ul class="nav navbar-nav">
         <li class="active"><a href="http://localhost:5000">Home</a></li>
         <li id="newDish"><a href="{{url_for('newDish')}}"><span class="glyphicon glyphicon-glass" aria-hidden="true"></span>Add New Dish</a></li>
         <li style="float:right;">
-          <div class="col-md-1  text-right">
-            <!-- Need to remove -->
-          </div>
+            <div class="col-md-1  text-right">
+                <!-- Need to remove -->
+            </div>
         </li>
-        <!-- <li id="logout"><a href="{{url_for('gdisconnect')}}">Logout</a></li>-->
-      </ul>
-  </nav>
+    </ul>
+</nav>
 
 <script>
-        function signInCallback(authResult) {
-          console.log(authResult)
-          console.log(authResult['code'])
-          if (authResult['code']) {
-            // Hide the sign-in button now that the user is authorized
-            $('#signinButton').attr('style', 'display: none');
-            // Send the one-time-use code to the server, if the server responds, write a 'login successful' message to the web page and then redirect back to the main restaurants page
-            console.log('{{loggedusername}}');
-            name = '{{loggedusername}}';
-            if(name=='None'){
-                $.ajax({
-                  type: 'POST',
-                  url: '/gconnect?state={{STATE}}',
-                  processData: false,
-                  data: authResult['code'],
-                  contentType: 'application/octet-stream; charset=utf-8',
-                  success: function(result) {
-                      // Handle or verify the server response if necessary.
-                      if (result) {
-                          window.location.href = "/";
-                            //$('#result').html('Welcome '+JSON.parse(result).username)
-                      } else if (authResult['error']) {
-                            console.log('There was an error: ' + authResult['error']);
-                      } else {
-                            $('#result').html('Failed to make a server-side call. Check your configuration and console.');
-                      }
-                  }    
-                }); 
-            }else{
-                console.log('gconnect call was skipped');
-            }
-          } 
-        }    //end of gConnect callback
-        
-        function signOut() {
-            var auth2 = gapi.auth2.getAuthInstance();
-            auth2.signOut().then(function () {
-              console.log('User signed out.');
-            });
-        }
-        
-        function disconnect() {
-        	name = '{{loggedusername}}';
-            if(name!='None'){
-                  $.ajax({
-                    type: 'POST',
-                    url: '/gdisconnect?state={{STATE}}',
-                    processData: false,
-                    contentType: 'application/octet-stream; charset=utf-8',
-                    success: function(result) {
-                        // Handle or verify the server response if necessary.
-                        if (result) {
-                        	signOut();
-                            window.location.href = "/";
-                        } else if (authResult['error']) {
-                              console.log('There was an error: ' + authResult['error']);
-                        } else {
-                              $('#result').html('Failed to make a server-side call. Check your configuration and console.');
-                        }
-                    },   
-                    error: function(result){
-                    	console.log(result);
-                    }
-                  });// end of ajax call 
-            }else{
-                  console.log('gdisconnect call was skipped');
-            }
-        } 
+    function onSignIn(googleUser) {
+        var profile = googleUser.getBasicProfile();
 
-        $( document ).ready(function() {
-            $("#newDish").hide();
-            $("#logout").hide();
-           name = '{{loggedusername}}';
-           url = '{{url_for("newDish")}}';
-           if(name!='None'){
-             $("#result").html('Welcome ' + name);
-             $("#newDish").show();
-             $("#logout").show();
-             //$("ul").append('<li><a href="/restaurant/dish/new/">Add New Dish</a></li>');
-            }
-          });
+        // pass id_token to the service backend
+        var id_token = googleUser.getAuthResponse().id_token;
+
+        name = '{{loggedusername}}';
+        if (name == 'None') {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/gsignin2connect?state={{STATE}}');
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                console.log('Signed in as: ' + xhr.responseText);
+                window.location.href = "/";
+            };
+            xhr.send('idtoken=' + id_token);
+        } 
+    }
+
+    function signOut() {
+        var auth2 = gapi.auth2.getAuthInstance();
+        auth2.signOut().then(function() {
+            console.log('User signed out.');
+        });
+    }
+
+    function disconnect() {
+        name = '{{loggedusername}}';
+        if (name != 'None') {
+            $.ajax({
+                type: 'POST',
+                url: '/gdisconnect?state={{STATE}}',
+                processData: false,
+                contentType: 'application/octet-stream; charset=utf-8',
+                success: function(result) {
+                    // Handle or verify the server response if necessary.
+                    if (result) {
+                        signOut();
+                        window.location.href = "/";
+                    } else if (authResult['error']) {
+                        console.log('There was an error: ' + authResult['error']);
+                    } else {
+                        $('#result').html('Failed to make a server-side call. Check your configuration and console.');
+                    }
+                },
+                error: function(result) {
+                    console.log(result);
+                }
+            }); // end of ajax call 
+        } else {
+            console.log('gdisconnect call was skipped');
+        }
+    }
+
+    $(document).ready(function() {
+        $("#newDish").hide();
+        $("#logout").hide();
+        name = '{{loggedusername}}';
+        url = '{{url_for("newDish")}}';
+        if (name != 'None') {
+            $("#result").html('Welcome ' + name);
+            $("#newDish").show();
+            $("#logout").show();
+            //$("ul").append('<li><a href="/restaurant/dish/new/">Add New Dish</a></li>');
+        }
+    });
 </script>
   <!--End header.html -->
