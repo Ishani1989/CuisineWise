@@ -3,15 +3,15 @@
 Cuisine Wise is an application built in Python that lists a variety of cuisines and dishes associated with each cuisine. Users can browse through their favorite cuisines and view their corresponding recipes.
 This project uses Google's single sign on feature to allow users to login and add/update/delete information. The project.py file when run, starts a server on port 5000 and displays the latest 5 dishes added to our database on the home page.
 
-![alt text](https://github.com/Ishani1989/MyNeighborhoodMap/blob/master/static/Screenshots/CalTrainIceCreamFinderHomePage.jpg "Home Page for Caltrain Ice cream finder")
+![alt text](https://github.com/Ishani1989/CuisineWise/blob/master/static/screenshots/HomePage.JPG "Home Page for Cuisine Wise app")
 
-The input text box can be used to search for and filter locations within the list.
+Click on cuisine on the left to view specific dishes
 
-![alt text](https://github.com/Ishani1989/MyNeighborhoodMap/blob/master/static/Screenshots/LiveSearchScreen.jpg "Search Screen")
+![alt text](https://github.com/Ishani1989/CuisineWise/blob/master/static/screenshots/CuisineSpecificDishes.JPG "Cuisine Specific Dishes")
 
-Finally, on click of the location from the list, the ice cream centers are displayed. As of now, only names are displayed. Addresses and image may be added in future.
+Click on particular dish to view its description
 
-![alt text](https://github.com/Ishani1989/MyNeighborhoodMap/blob/master/static/Screenshots/SearchScreenWithIceCreamCenters.JPG "Search Screen showing ice cream centers")
+![alt text](https://github.com/Ishani1989/CuisineWise/blob/master/static/screenshots/DishDescriptionPage.JPG "Dish Description")
 
 ## Dependency
 
