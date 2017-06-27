@@ -2,11 +2,11 @@
 
   <!--Start header.html -->
   <div class="row">
-     <div class="col-md-7">
+     <div class="col-md-6">
      </div>
      <div id="result" class="col-md-3">
      </div>
-     <div class="g-signin2" data-onsuccess="onSignIn">
+     <div class="g-signin2 col-md-2" data-onsuccess="onSignIn">
      </div>
         <meta name="google-signin-scope" content="openid email"/>
         <meta name="google-signin-clientid" content="893057848592-c4dplknr2tfvbui5q817a97a88qitj2l.apps.googleusercontent.com"/>
@@ -15,7 +15,8 @@
         <meta name="google-signin-cookiepolicy" content="single_host_origin"/>
         <meta name="google-signin-callback" content="signInCallback"/>
         <meta name="google-signin-approvalprompt" content="force"/>
-  </div>
+        <div id="logout"><button type="button" class="btn btn-default" onclick="disconnect()">Logout</button></div>   
+  </div><!-- end of row -->
 
   <nav class="navbar navbar-inverse">
       <ul class="nav navbar-nav">
@@ -26,9 +27,7 @@
             <!-- Need to remove -->
           </div>
         </li>
-        <li></li>
-        <li></li>
-        <li id="logout"><a href="{{url_for('gdisconnect')}}">Logout</a></li>
+        <!-- <li id="logout"><a href="{{url_for('gdisconnect')}}">Logout</a></li>-->
       </ul>
   </nav>
 
@@ -65,9 +64,52 @@
                 console.log('gconnect call was skipped');
             }
           } 
-        }    
+        }    //end of gConnect callback
+        
+        function onSignIn(googleUser) {
+        	  var profile = googleUser.getBasicProfile();
+        	  console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+        	  console.log('Name: ' + profile.getName());
+        	  console.log('Image URL: ' + profile.getImageUrl());
+        	  console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+        }
+        
+        function signOut() {
+            var auth2 = gapi.auth2.getAuthInstance();
+            auth2.signOut().then(function () {
+              console.log('User signed out.');
+            });
+        }
+        
+        function disconnect() {
+        	name = '{{loggedusername}}';
+            if(name!='None'){
+                  $.ajax({
+                    type: 'POST',
+                    url: '/gdisconnect?state={{STATE}}',
+                    processData: false,
+                    contentType: 'application/octet-stream; charset=utf-8',
+                    success: function(result) {
+                        // Handle or verify the server response if necessary.
+                        if (result) {
+                        	signOut();
+                            window.location.href = "/";
+                        } else if (authResult['error']) {
+                              console.log('There was an error: ' + authResult['error']);
+                        } else {
+                              $('#result').html('Failed to make a server-side call. Check your configuration and console.');
+                        }
+                    },   
+                    error: function(result){
+                    	console.log(result);
+                    }
+                  });// end of ajax call 
+            }else{
+                  console.log('gdisconnect call was skipped');
+            }
+        } 
 
-           $( document ).ready(function() {
+        $( document ).ready(function() {
             $("#newDish").hide();
             $("#logout").hide();
            name = '{{loggedusername}}';

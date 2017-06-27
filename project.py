@@ -4,7 +4,6 @@
 import os
 from flask import Flask, render_template, request, redirect, jsonify, \
     url_for, flash, send_from_directory
-from werkzeug.utils import secure_filename
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Cuisine, Dish, User
@@ -12,7 +11,9 @@ from flask import session as login_session
 from datetime import datetime
 import random
 import string
+
 import logging
+from logging.handlers import RotatingFileHandler
 
 # IMPORTS FOR THIS STEP
 
@@ -23,34 +24,16 @@ import json
 from flask import make_response
 import requests
 
-httplib2.debuglevel = 4
+# For debugging purpose
+# httplib2.debuglevel = 4
 
 app = Flask(__name__)
 
 CLIENT_ID = json.loads(open('client_secrets.json',
                             'r').read())['web']['client_id']
-APPLICATION_NAME = 'Restaurant Menu Application'
-
-UPLOAD_FOLDER = 'D:\softwares\Eclipse\workspace\CuisineWise\static'
-ALLOWED_EXTENSIONS = set([
-    'txt',
-    'pdf',
-    'png',
-    'jpg',
-    'jpeg',
-    'gif',
-    ])
-
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() \
-        in ALLOWED_EXTENSIONS
-
+APPLICATION_NAME = 'Cuisine Wise Application'
 
 # Connect to Database and create database session
-
 engine = create_engine('sqlite:///new-cuisinewise.db')
 Base.metadata.bind = engine
 
@@ -61,20 +44,18 @@ username = ''
 
 
 # Create anti-forgery state token
-
-@app.route('/login')
 def getLoginState():
     state = ''.join(random.choice(string.ascii_uppercase +
                                   string.digits) for x in xrange(32))
     login_session['state'] = state
-    print login_session['state']
+    print 'loggedin state - ' + login_session['state']
     return state
 
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
     print 'inside gconnect'
-    print login_session['state']
+    print 'state - ' + login_session.get('state')
 
     # Validate state token
 
@@ -107,7 +88,6 @@ def gconnect():
     # Check that the access token is valid.
 
     access_token = credentials.access_token
-    print 'access_token' + str(access_token)
     url = \
         'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' \
         % access_token
@@ -155,7 +135,6 @@ def gconnect():
 
     # Get user info
 
-    print 'Before calling getUserInfo'
     userinfo_url = 'https://www.googleapis.com/oauth2/v1/userinfo'
     params = {'access_token': credentials.access_token, 'alt': 'json'}
     answer = requests.get(userinfo_url, params=params)
@@ -172,8 +151,6 @@ def gconnect():
     if not user_id:
         user_id = createUser(login_session)
         login_session['user_id'] = user_id
-
-    print 'Before returning'
 
     data = {}
     data['userid'] = login_session['email']
@@ -208,26 +185,20 @@ def getUserID(email):
         return None
 
 
-@app.route('/gdisconnect')
+@app.route('/gdisconnect', methods=['POST'])
 def gdisconnect():
-    access_token = login_session.get('access_token')
-    if access_token is not None:
-        print 'In gdisconnect access token is - ' + access_token
-        print 'User name is: '
-        print login_session['username']
-        if access_token is None:
-            print 'Access Token is None'
-            response = make_response(json.dumps('''Current user not
-                                                connected.'''), 401)
-            response.headers['Content-Type'] = 'application/json'
-            return response
+    print 'gdisconnect method'
+    loggedin_username = login_session.get('username')
+    print 'User name is: ' + str(loggedin_username)
+    
+    if loggedin_username is not None:
         url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' \
             % login_session['access_token']
         h = httplib2.Http()
         result = h.request(url, 'GET')[0]
-        print 'result is '
         print result
         if result['status'] == '200':
+            del login_session['state']
             del login_session['access_token']
             del login_session['gplus_id']
             del login_session['username']
@@ -237,44 +208,46 @@ def gdisconnect():
                 make_response(json.dumps('Successfully disconnected.'),
                               200)
             response.headers['Content-Type'] = 'application/json'
-            return response
+            flash("You are now logged out.")
+            return response 
         else:
-
             response = make_response(json.dumps('''Failed to revoke token for
                                                 given user.''', 400))
             response.headers['Content-Type'] = 'application/json'
             return response
     else:
-        return 'User is not logged in'
-
-
+        response = make_response(json.dumps('''Current user not
+                                                connected.'''), 200)
+        response.headers['Content-Type'] = 'application/json'
+        return response    
 # Endpoint1 - Show all cuisines
 
 @app.route('/')
 def showCuisines():
+    app.logger.debug('showCuisines called')
     print 'showCuisines'
     dbcuisines = session.query(Cuisine).order_by(asc(Cuisine.name))
     dbdishes = showlatestDishesWithCuisine()
     username = login_session.get('username')
-    print username
-    print dbcuisines[2].name
-
+    print 'username - ' + str(username)
+    print 'state - ' + str(login_session.get('state'))
+    if login_session.get('state') is None:
+        getLoginState()
+        
     return render_template('cuisines.html', cuisines=dbcuisines,
                            latestdishes=dbdishes,
-                           STATE=getLoginState(),
+                           STATE=login_session.get('state'),
                            loggedusername=username)
 
-
 def showlatestDishesWithCuisine():
-    dbdishes = session.query(Dish.id.label('dish_id'),
-                             Dish.name.label('dish_name'),
-                             Cuisine.id.label('cuisine_id'),
-                             Cuisine.name.label('cuisine_name'),
-                             Dish.created_on).join(Cuisine).order_by\
-                            (Dish.created_on.desc()).limit(5).all()
+    dbdishes = session.query(
+                Dish.id.label('dish_id'),
+                Dish.name.label('dish_name'),
+                Cuisine.id.label('cuisine_id'),
+                Cuisine.name.label('cuisine_name'),
+                Dish.created_on
+                ).join(Cuisine).order_by(Dish.created_on.desc()).limit(5).all()
 
-    for dish in dbdishes:
-        print dish.dish_name, dish.cuisine_name, dish.created_on
     return dbdishes
 
 
@@ -298,29 +271,32 @@ def showDishes(cuisine_id):
 def editDish(dish_id, cuisine_id):
     username = login_session.get('username')
     loginid = login_session.get('email')
-    if request.method == 'POST':
-        print str(request)
-        cuisine = session.query(Cuisine).filter_by(name=request.form
-                                                   ['cuisine']).one()
-        mydish = session.query(Dish).filter_by(id=dish_id).one()
-        timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        mydish.name = request.form['name']
-        mydish.description = request.form['description']
-        mydish.cuisine_id = cuisine.id
-        mydish.recipe = request.form['recipe']
-        mydish.modified_on = timenow
-        session.add(mydish)
-        session.commit()
-        flash('%s Item Successfully Updated' % mydish.name)
-        return redirect(url_for('showDishes', cuisine_id=cuisine.id,
-                        loggedusername=username))
+    if username is None:
+        return showCuisines()
     else:
-        cuisine = session.query(Cuisine).filter_by(id=cuisine_id).one()
-        dish = session.query(Dish).filter_by(id=dish_id).one()
-        cuisineall = session.query(Cuisine.name).all()
-        return render_template('editDishItem.html', dish=dish,
-                               cuisine=cuisine, cuisines=cuisineall,
-                               loggedusername=username)
+        if request.method == 'POST':
+            print str(request)
+            cuisine = session.query(Cuisine).filter_by(name=request.form
+                                                       ['cuisine']).one()
+            mydish = session.query(Dish).filter_by(id=dish_id).one()
+            timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            mydish.name = request.form['name']
+            mydish.description = request.form['description']
+            mydish.cuisine_id = cuisine.id
+            mydish.recipe = request.form['recipe']
+            mydish.modified_on = timenow
+            session.add(mydish)
+            session.commit()
+            flash('%s Item Successfully Updated' % mydish.name)
+            return redirect(url_for('showDishes', cuisine_id=cuisine.id,
+                            loggedusername=username))
+        else:
+            cuisine = session.query(Cuisine).filter_by(id=cuisine_id).one()
+            dish = session.query(Dish).filter_by(id=dish_id).one()
+            cuisineall = session.query(Cuisine.name).all()
+            return render_template('editDishItem.html', dish=dish,
+                                   cuisine=cuisine, cuisines=cuisineall,
+                                   loggedusername=username)
 
 
 @app.route('/cuisines/<int:cuisine_id>/<int:dish_id>/editdesc/',
@@ -328,30 +304,33 @@ def editDish(dish_id, cuisine_id):
 def editDishDesc(dish_id, cuisine_id):
     username = login_session.get('username')
     loginid = login_session.get('email')
-    if request.method == 'POST':
-        print str(request)
-        cuisine = session.query(Cuisine).filter_by(name=request.form
-                                                   ['cuisine']).one()
-        mydish = session.query(Dish).filter_by(id=dish_id).one()
-        timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        mydish.name = request.form['name']
-        mydish.description = request.form['description']
-        mydish.cuisine_id = cuisine.id
-        mydish.recipe = request.form['recipe']
-        mydish.modified_on = timenow
-        session.add(mydish)
-        session.commit()
-        flash('%s Item Successfully Updated' % mydish.name)
-        return redirect(url_for('showDescription',
-                        cuisine_id=cuisine.id, dish_id=mydish.id,
-                        loggedusername=username))
+    if username is None:
+        return showCuisines()
     else:
-        cuisine = session.query(Cuisine).filter_by(id=cuisine_id).one()
-        dish = session.query(Dish).filter_by(id=dish_id).one()
-        cuisineall = session.query(Cuisine.name).all()
-        return render_template('editDishItem.html', dish=dish,
-                               cuisine=cuisine, cuisines=cuisineall,
-                               loggedusername=username)
+        if request.method == 'POST':
+            print str(request)
+            cuisine = session.query(Cuisine).filter_by(name=request.form
+                                                       ['cuisine']).one()
+            mydish = session.query(Dish).filter_by(id=dish_id).one()
+            timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            mydish.name = request.form['name']
+            mydish.description = request.form['description']
+            mydish.cuisine_id = cuisine.id
+            mydish.recipe = request.form['recipe']
+            mydish.modified_on = timenow
+            session.add(mydish)
+            session.commit()
+            flash('%s Item Successfully Updated' % mydish.name)
+            return redirect(url_for('showDescription',
+                            cuisine_id=cuisine.id, dish_id=mydish.id,
+                            loggedusername=username))
+        else:
+            cuisine = session.query(Cuisine).filter_by(id=cuisine_id).one()
+            dish = session.query(Dish).filter_by(id=dish_id).one()
+            cuisineall = session.query(Cuisine.name).all()
+            return render_template('editDishItem.html', dish=dish,
+                                   cuisine=cuisine, cuisines=cuisineall,
+                                   loggedusername=username)
 
 
 # Create a new menu item
@@ -360,32 +339,32 @@ def editDishDesc(dish_id, cuisine_id):
 def newDish():
     username = login_session.get('username')
     loginid = login_session.get('email')
-
-    # return render_template('addnewdish.html')
-
-    if request.method == 'POST':
-        cuisine = session.query(Cuisine).filter_by(name=request.form
-                                                   ['cuisine']).one()
-        timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        newItem = Dish(
-            name=request.form['name'],
-            picurl='',
-            description=request.form['description'],
-            cuisine_id=cuisine.id,
-            recipe=request.form['recipe'],
-            created_on=timenow,
-            modified_on=timenow,
-            user_id=loginid,
-            )
-        session.add(newItem)
-        session.commit()
-        flash('New Menu %s Item Successfully Created' % newItem.name)
-        return redirect(url_for('showDishes', cuisine_id=cuisine.id,
-                        loggedusername=username))
+    if username is None:
+        return showCuisines()
     else:
-        cuisineall = session.query(Cuisine.name).all()
-        return render_template('addnewdish.html', cuisines=cuisineall,
-                               loggedusername=username)
+        if request.method == 'POST':
+            cuisine = session.query(Cuisine).filter_by(name=request.form
+                                                       ['cuisine']).one()
+            timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            newItem = Dish(
+                name=request.form['name'],
+                picurl='',
+                description=request.form['description'],
+                cuisine_id=cuisine.id,
+                recipe=request.form['recipe'],
+                created_on=timenow,
+                modified_on=timenow,
+                user_id=loginid,
+                )
+            session.add(newItem)
+            session.commit()
+            flash('New Menu %s Item Successfully Created' % newItem.name)
+            return redirect(url_for('showDishes', cuisine_id=cuisine.id,
+                            loggedusername=username))
+        else:
+            cuisineall = session.query(Cuisine.name).all()
+            return render_template('addnewdish.html', cuisines=cuisineall,
+                                   loggedusername=username)
 
 
 # Delete a dish
@@ -394,19 +373,22 @@ def newDish():
 def deleteDish(dish_id):
     username = login_session.get('username')
     loginid = login_session.get('email')
-    dish = session.query(Dish).filter_by(id=dish_id).one()
-    name = dish.name
-    if request.method == 'POST':
-        session.delete(dish)
-        session.commit()
-        flash(' %s dish Successfully deleted' % name)
-        return redirect(url_for('showDishes',
-                        cuisine_id=dish.cuisine_id,
-                        loggedusername=username))
+    if username is None:
+        return showCuisines()
     else:
-        return render_template('deleteDish.html', dish=dish,
-                               cuisine_id=dish.cuisine_id,
-                               loggedusername=username)
+        dish = session.query(Dish).filter_by(id=dish_id).one()
+        name = dish.name
+        if request.method == 'POST':
+            session.delete(dish)
+            session.commit()
+            flash(' %s dish Successfully deleted' % name)
+            return redirect(url_for('showDishes',
+                            cuisine_id=dish.cuisine_id,
+                            loggedusername=username))
+        else:
+            return render_template('deleteDish.html', dish=dish,
+                                   cuisine_id=dish.cuisine_id,
+                                   loggedusername=username)
 
 
 # Show dish description
@@ -446,6 +428,14 @@ def showlatestDishesWithCuisineJSON():
                    session.query(Dish).order_by(Dish.created_on.desc())])
 
 if __name__ == '__main__':
-    app.secret_key = 'super_secret_key'
+    handler = RotatingFileHandler('cuisinewise.log', maxBytes=10000, backupCount=1)
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    handler.setFormatter(formatter)
+    app.logger.addHandler(handler)
+    app.logger.info('Application started')
+    
+    app.secret_key = 'my_super_secret_key'
     app.debug = True
     app.run(host='0.0.0.0', port=5000)
+    
