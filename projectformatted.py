@@ -27,8 +27,8 @@ httplib2.debuglevel = 4
 
 app = Flask(__name__)
 
-CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web'
-        ]['client_id']
+CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']
+['client_id']
 APPLICATION_NAME = 'Restaurant Menu Application'
 
 UPLOAD_FOLDER = 'D:\softwares\Eclipse\workspace\CuisineWise\static'
@@ -64,8 +64,8 @@ username = ''
 
 @app.route('/login')
 def getLoginState():
-    state = ''.join(random.choice(string.ascii_uppercase
-                    + string.digits) for x in xrange(32))
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
+                    for x in xrange(32))
     login_session['state'] = state
     print login_session['state']
     return state
@@ -79,8 +79,7 @@ def gconnect():
     # Validate state token
 
     if request.args.get('state') != login_session['state']:
-        response = make_response(json.dumps('Invalid state parameter.'
-                                 ), 401)
+        response = make_response(json.dumps('Invalid state parameter.'), 401)
         print 'state error'
         response.headers['Content-Type'] = 'application/json'
         return response
@@ -95,14 +94,13 @@ def gconnect():
         # Upgrade the authorization code into a credentials object
 
         oauth_flow = flow_from_clientsecrets('client_secrets.json',
-                scope='')
+                                             scope='')
         print oauth_flow.redirect_uri
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
-        response = \
-            make_response(json.dumps('Failed to upgrade the authorization code.'
-                          ), 401)
+        response = make_response(json.dumps('Failed to upgrade the
+                                            authorization code.'), 401)
         print 'flowexchange error'
         response.headers['Content-Type'] = 'application/json'
         return response
@@ -129,9 +127,8 @@ def gconnect():
 
     gplus_id = credentials.id_token['sub']
     if result['user_id'] != gplus_id:
-        response = \
-            make_response(json.dumps("Token's user ID doesn't match given user ID."
-                          ), 401)
+        response = make_response(json.dumps("Token's user ID doesn't match
+                                            given user ID."), 401)
         print 'user ids dont match'
         response.headers['Content-Type'] = 'application/json'
         return response
@@ -139,9 +136,8 @@ def gconnect():
     # Verify that the access token is valid for this app.
 
     if result['issued_to'] != CLIENT_ID:
-        response = \
-            make_response(json.dumps("Token's client ID does not match app's."
-                          ), 401)
+        response = make_response(json.dumps("Token's client ID does not match
+                                            app's."), 401)
         print "Token's client ID does not match app's."
         response.headers['Content-Type'] = 'application/json'
         return response
@@ -196,8 +192,7 @@ def createUser(login_session):
                    picture=login_session['picture'])
     session.add(newUser)
     session.commit()
-    user = session.query(User).filter_by(email=login_session['email'
-            ]).one()
+    user = session.query(User).filter_by(email=login_session['email']).one()
     return user.id
 
 
@@ -217,15 +212,14 @@ def getUserID(email):
 @app.route('/gdisconnect')
 def gdisconnect():
     access_token = login_session.get('access_token')
-    if access_token != None:
+    if access_token is not None:
         print 'In gdisconnect access token is - ' + access_token
         print 'User name is: '
         print login_session['username']
         if access_token is None:
             print 'Access Token is None'
-            response = \
-                make_response(json.dumps('Current user not connected.'
-                              ), 401)
+            response = make_response(json.dumps('Current user not connected.'),
+                                     401)
             response.headers['Content-Type'] = 'application/json'
             return response
         url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' \
@@ -247,9 +241,8 @@ def gdisconnect():
             return response
         else:
 
-            response = \
-                make_response(json.dumps('Failed to revoke token for given user.'
-                              , 400))
+            response = make_response(json.dumps('Failed to revoke token for
+                                     given user.', 400))
             response.headers['Content-Type'] = 'application/json'
             return response
     else:
@@ -278,7 +271,8 @@ def showlatestDishesWithCuisine():
                              Dish.name.label('dish_name'),
                              Cuisine.id.label('cuisine_id'),
                              Cuisine.name.label('cuisine_name'),
-                             Dish.created_on).join(Cuisine).order_by(Dish.created_on.desc()).limit(5).all()
+                             Dish.created_on)
+    .join(Cuisine).order_by(Dish.created_on.desc()).limit(5).all()
 
     for dish in dbdishes:
         print dish.dish_name, dish.cuisine_name, dish.created_on
@@ -307,9 +301,8 @@ def editDish(dish_id, cuisine_id):
     loginid = login_session.get('email')
     if request.method == 'POST':
         print str(request)
-        cuisine = \
-            session.query(Cuisine).filter_by(name=request.form['cuisine'
-                ]).one()
+        cuisine = session.query(Cuisine).filter_by
+        (name=request.form['cuisine']).one()
         mydish = session.query(Dish).filter_by(id=dish_id).one()
         timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         mydish.name = request.form['name']
@@ -338,9 +331,8 @@ def editDishDesc(dish_id, cuisine_id):
     loginid = login_session.get('email')
     if request.method == 'POST':
         print str(request)
-        cuisine = \
-            session.query(Cuisine).filter_by(name=request.form['cuisine'
-                ]).one()
+        cuisine = session.query(Cuisine).filter_by
+        (name=request.form['cuisine']).one()
         mydish = session.query(Dish).filter_by(id=dish_id).one()
         timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         mydish.name = request.form['name']
@@ -373,9 +365,8 @@ def newDish():
     # return render_template('addnewdish.html')
 
     if request.method == 'POST':
-        cuisine = \
-            session.query(Cuisine).filter_by(name=request.form['cuisine'
-                ]).one()
+        cuisine = session.query(Cuisine).filter_by
+        (name=request.form['cuisine']).one()
         timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         newItem = Dish(
             name=request.form['name'],
@@ -414,7 +405,7 @@ def deleteDish(dish_id):
                         cuisine_id=dish.cuisine_id,
                         loggedusername=username))
     else:
-        return render_template('deleteDish.html', dish=dish,
+        return render_template('deletemenuitem.html', dish=dish,
                                cuisine_id=dish.cuisine_id,
                                loggedusername=username)
 

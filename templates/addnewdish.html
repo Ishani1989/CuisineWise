@@ -1,38 +1,43 @@
 {% extends "main.html" %}
 {% block content %}
 {% include "header.html" %}
-	<div class="row banner main">
-		<div class="col-md-11 col-md-offset-1 padding-none">
-			<h1>New Dish Entry</h1>
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-md-6 col-md-offset-1 padding-top">
-      		
-			<form action="#" method = "post">
-				<div class="form-group">
-					<label for="name">Name:</label>
-					<input type ="text" maxlength="50" class="form-control" name="name"placeholder="Name of the dish">
-
-					<label for="description">Description:</label>
-					<textarea class="form-control" maxlength="250" rows="2" name="description" placeholder="Description of the dish"></textarea>
-
-					<label for="recipe">Recipe:</label>
-						
-						<textarea class="form-control" maxlength="2000" rows="10" name="recipe" placeholder="Enter recipe for the dish"></textarea></br>
-					<label for="cuisine">Cuisine:</label>
-					<select name = "cuisine">
-						<option value="" disabled selected>Select...</option>
-					{% for item in cuisines %}
-     					<option value={{ item[0] }}>{{ item[0] }}
-				    	</option>	
-      				{% endfor %}
-      				</select></br></br>
-					<button type="submit" class="btn btn-default" id="submit" type="submit">
-					<span class="glyphicon glyphicon-glass" aria-hidden="true"></span>Create</button>
-				</div>
-			</form>
-		</div>
-	</div>
+<div class="row banner main">
+   <div class="col-md-11 col-md-offset-1 padding-none">
+      <h1>New Dish Entry</h1>
+   </div>
+</div>
+<div class="row">
+   <div class="col-md-6 col-md-offset-1 padding-top">
+      <form action="#" method = "post">
+         <div class="form-group">
+            <label for="name">
+               <h3>Name:</h3>
+            </label>
+            <input type ="text" maxlength="50" class="form-control" name="name"placeholder="Name of the dish">
+            <label for="description">
+               <h3>Description:</h3>
+            </label>
+            <textarea class="form-control" maxlength="250" rows="2" name="description" placeholder="Description of the dish"></textarea>
+            <label for="recipe">
+               <h3>Recipe:</h3>
+            </label>
+            <textarea class="form-control" maxlength="2000" rows="10" name="recipe" placeholder="Enter recipe for the dish"></textarea>
+            <label for="cuisine">
+               <h3>Cuisine:</h3>
+            </label>
+            </br>
+            <select name = "cuisine">
+               <option value="" disabled selected>Select...</option>
+               {% for item in cuisines %}
+               <option value={{ item[0] }}>{{ item[0] }}
+               </option>	
+               {% endfor %}
+            </select>
+            </br></br>
+            <button type="submit" class="btn btn-default" id="submit" type="submit">
+            <span class="glyphicon glyphicon-glass" aria-hidden="true"></span>Create</button>
+         </div>
+      </form>
+   </div>
+</div>
 {% endblock %}
-

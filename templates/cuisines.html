@@ -2,7 +2,6 @@
 {% block content %}
 {% include "header.html" %}
 <!-- Cuisines.html -->
-
 <div class="row banner main">
    <div class="col-md-1"></div>
    <div class="col-md-11">
@@ -20,31 +19,27 @@
    {% endif %}
    {% endwith %}
 </div>
-
-
-   <div class="left col-md-2">
+<div class="left col-md-2">
    <h2>Cuisines</h2>
-      {% for cuisine in cuisines %}
-      <a href = "{{url_for('showDishes', cuisine_id = cuisine.id)}}">
-            <div class="restaurant-list">
-               <h4>{{cuisine.name}}</h4>
-            </div>
-      </a>
-      {% endfor %}
-   </div>
-   <div class="right col-md-10">
-      <h2>Our latest additions:</h2>
-      {% for dish in latestdishes %}
-         <a href = "{{url_for('showDescription', dish_id=dish.dish_id, cuisine_id= dish.cuisine_id)}}">
-            <div class="row dishlist">
-               <div>
-                     <h4>{{dish.dish_name}} ({{dish.cuisine_name}})</h4>  
-               </div>
-            </div>
-         </a>
-      {% endfor %}
-   </div>
-
+   {% for cuisine in cuisines %}
+   <a href = "{{url_for('showDishes', cuisine_id = cuisine.id)}}">
+      <div class="restaurant-list">
+         <h4>{{cuisine.name}}</h4>
+      </div>
+   </a>
+   {% endfor %}
+</div>
+<div class="right col-md-10">
+   <h2>Our latest additions:</h2>
+   {% for dish in latestdishes %}
+   <a href = "{{url_for('showDescription', dish_id=dish.dish_id, cuisine_id= dish.cuisine_id)}}">
+      <div class="row dishlist">
+         <div>
+            <h4>{{dish.dish_name}} ({{dish.cuisine_name}})</h4>
+         </div>
+      </div>
+   </a>
+   {% endfor %}
+</div>
 {% endblock %}
-
 <!-- End Cuisines.html -->
