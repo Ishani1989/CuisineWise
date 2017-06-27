@@ -51,7 +51,38 @@ def getLoginState():
     print 'loggedin state - ' + login_session['state']
     return state
 
+@app.route('/gsignin2connect', methods=['POST'])
+def gsignin2connect():
+    print 'gsignin2connect'
+    app.logger.debug('gsignin2connect called')
+    
+    state = request.args.get('state')
+    idtoken = request.form.get('idtoken')
+    print 'data - ' + str(idtoken)
+    
+    url = \
+        'https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=%s' \
+        % idtoken
+    h = httplib2.Http()
+    data = json.loads(h.request(url, 'GET')[1])
+    print data 
+    
+    login_session['username'] = data['name']
+    login_session['picture'] = data['picture']
+    login_session['email'] = data['email']
+    login_session['userid'] = data['sub']
+    
+    print 'login session - ' + login_session.get('username')
+    
+    data = {}
+    data['userid'] = login_session['email']
+    data['username'] = login_session['username']
 
+    json_data = json.dumps(data)
+    return json_data
+        
+    
+    
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
     print 'inside gconnect'
@@ -140,7 +171,7 @@ def gconnect():
     answer = requests.get(userinfo_url, params=params)
 
     data = answer.json()
-
+    
     login_session['username'] = data['name']
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
