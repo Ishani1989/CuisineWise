@@ -151,13 +151,14 @@ def showDishes(cuisine_id):
 def editDish(dish_id, cuisine_id):
     username = login_session.get('username')
     loginid = login_session.get('email')
+
     if username is None:
         return showCuisines()
-    else:
+    mydish = session.query(Dish).filter_by(id=dish_id).one()
+    if mydish.user_id == loginid:
         if request.method == 'POST':
             cuisine = session.query(Cuisine).filter_by(name=request.form
                                                        ['cuisine']).one()
-            mydish = session.query(Dish).filter_by(id=dish_id).one()
             timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             mydish.name = request.form['name']
             mydish.description = request.form['description']
@@ -176,6 +177,9 @@ def editDish(dish_id, cuisine_id):
             return render_template('editDishItem.html', dish=dish,
                                    cuisine=cuisine, cuisines=cuisineall,
                                    loggedusername=username)
+    else:
+        return redirect(url_for('showDishes', cuisine_id=cuisine.id,
+                        loggedusername=username))
 
 
 @app.route('/cuisines/<int:cuisine_id>/<int:dish_id>/editdesc/',
@@ -185,11 +189,11 @@ def editDishDesc(dish_id, cuisine_id):
     loginid = login_session.get('email')
     if username is None:
         return showCuisines()
-    else:
+    mydish = session.query(Dish).filter_by(id=dish_id).one()
+    if mydish.user_id == loginid:
         if request.method == 'POST':
             cuisine = session.query(Cuisine).filter_by(name=request.form
                                                        ['cuisine']).one()
-            mydish = session.query(Dish).filter_by(id=dish_id).one()
             timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             mydish.name = request.form['name']
             mydish.description = request.form['description']
@@ -210,8 +214,12 @@ def editDishDesc(dish_id, cuisine_id):
                                    cuisine=cuisine, cuisines=cuisineall,
                                    loggedusername=username)
 
-
+    else:
+        return redirect(url_for('showDescription',
+                        cuisine_id=cuisine.id, dish_id=mydish.id,
+                        loggedusername=username))
 # Create a new menu item
+
 
 @app.route('/restaurant/dish/new/', methods=['GET', 'POST'])
 def newDish():
@@ -252,7 +260,8 @@ def deleteDish(dish_id):
     loginid = login_session.get('email')
     if username is None:
         return showCuisines()
-    else:
+    dish = session.query(Dish).filter_by(id=dish_id).one()
+    if dish.user_id == loginid:
         dish = session.query(Dish).filter_by(id=dish_id).one()
         name = dish.name
         if request.method == 'POST':
@@ -267,9 +276,13 @@ def deleteDish(dish_id):
                                    cuisine_id=dish.cuisine_id,
                                    loggedusername=username)
 
+    else:
+        return redirect(url_for('showDishes',
+                        cuisine_id=dish.cuisine_id,
+                        loggedusername=username))
+
 
 # Show dish description
-
 @app.route('/restaurant/<int:cuisine_id>/dish/<int:dish_id>/',
            methods=['GET', 'POST'])
 def showDescription(dish_id, cuisine_id):
